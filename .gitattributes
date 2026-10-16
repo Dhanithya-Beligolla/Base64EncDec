@@ -1,0 +1,19 @@
+# Normalise text files to LF inside the repository.
+* text=auto
+
+# Windows scripts must be checked out with CRLF line endings
+# (cmd.exe mis-parses labels/goto in LF-only batch files).
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.iss text eol=crlf
+
+*.py text diff=python
+*.md text
+
+# Checksum files are verified on Linux CI runners - keep them LF.
+SHA256SUMS.txt text eol=lf
+
+# Release binaries are stored with Git LFS.
+*.exe filter=lfs diff=lfs merge=lfs -text
+*.msi filter=lfs diff=lfs merge=lfs -text
+*.zip filter=lfs diff=lfs merge=lfs -text

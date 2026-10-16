@@ -1,0 +1,68 @@
+# Publishes a GitHub Release whenever a version tag (vX.Y.Z) is pushed.
+#
+# Each release expects, at the tagged commit:
+#   releases/<tag>/                 - binaries (Git LFS) + SHA256SUMS.txt
+#   .github/release-notes/<tag>.md  - first line "# <title>", rest is the body
+#
+# Re-run for an existing tag from the Actions tab ("Run workflow").
+
+name: Publish release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to (re)publish, e.g. v2.0.0"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Check out tagged commit with LFS files
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.tag || github.ref_name }}
+          lfs: true
+          fetch-depth: 0
+
+      - name: Verify release files
+        run: |
+          dir="releases/$TAG"
+          notes=".github/release-notes/$TAG.md"
+          [ -d "$dir" ]   || { echo "::error::Missing $dir"; exit 1; }
+          [ -f "$notes" ] || { echo "::error::Missing $notes"; exit 1; }
+          # Also fails if LFS returned pointer files instead of binaries.
+          (cd "$dir" && sha256sum --check --strict SHA256SUMS.txt)
+
+      - name: Create or update the GitHub release
+        run: |
+          notes_src=".github/release-notes/$TAG.md"
+          title="$(head -n1 "$notes_src" | sed 's/^#[[:space:]]*//')"
+          tail -n +2 "$notes_src" > "$RUNNER_TEMP/notes.md"
+
+          # Only the highest version tag is marked "Latest", so pushing
+          # an older tag later never takes over the Latest badge.
+          highest="$(git tag --list 'v*' --sort=-v:refname | head -n1)"
+          latest=false
+          [ "$TAG" = "$highest" ] && latest=true
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release edit "$TAG" --title "$title" \
+              --notes-file "$RUNNER_TEMP/notes.md" --latest="$latest"
+            gh release upload "$TAG" releases/"$TAG"/* --clobber
+          else
+            gh release create "$TAG" releases/"$TAG"/* --verify-tag \
+              --title "$title" --notes-file "$RUNNER_TEMP/notes.md" \
+              --latest="$latest"
+          fi

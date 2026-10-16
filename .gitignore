@@ -1,0 +1,56 @@
+# ---------------------------------------------------------------
+# Python
+# ---------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.python-version
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ---------------------------------------------------------------
+# PyInstaller
+# build_exe.bat regenerates build/, dist/ and the .spec file on
+# every run, so none of them belong in the repository.
+# ---------------------------------------------------------------
+build/
+dist/
+*.spec
+*.manifest
+
+# ---------------------------------------------------------------
+# Inno Setup
+# ---------------------------------------------------------------
+installer_output/
+
+# Published binaries live in releases/vX.Y.Z/ (tracked with Git LFS).
+
+# ---------------------------------------------------------------
+# Editors / IDEs
+# ---------------------------------------------------------------
+.vscode/
+.idea/
+.vs/
+*.code-workspace
+*.swp
+
+# ---------------------------------------------------------------
+# Windows / macOS
+# ---------------------------------------------------------------
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+.DS_Store
+
+# ---------------------------------------------------------------
+# Logs / temp files
+# ---------------------------------------------------------------
+*.log
+*.tmp
